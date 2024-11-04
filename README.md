@@ -1,6 +1,19 @@
+# Multiple Layered ASP.NET API Project - Online Shopping Platform
+
 ## Project Overview
 
 This project is an ASP.NET Core Web API developed for an online shopping platform. The project is built with a multi-layered architecture using the Entity Framework Code First approach.
+
+## Technologies Used
+
+- **ASP.NET Core**: The framework used for building the web API.
+- **Entity Framework Core**: Used for database interactions with a Code First approach.
+- **JWT (JSON Web Token)**: For authorization and secure token management.
+- **ASP.NET Core Identity**: For user authentication and management.
+- **Dependency Injection**: To manage service lifetimes and dependencies.
+- **Middleware**: Custom middleware for logging and request management.
+- **Model Validation**: To ensure data integrity and validity.
+- **Global Exception Handling**: For centralized error management.
 
 ## Project Requirements
 
@@ -60,4 +73,3 @@ The project supports the following HTTP methods:
 - **PUT**
 - **PATCH**
 - **DELETE**
-

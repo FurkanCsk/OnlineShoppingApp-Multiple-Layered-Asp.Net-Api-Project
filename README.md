@@ -1,7 +1,3 @@
-# Creating the README content in English and formatting it as a markdown file.
-
-readme_content = """# Multiple Layered ASP.NET API Project - Online Shopping Platform
-
 ## Project Overview
 
 This project is an ASP.NET Core Web API developed for an online shopping platform. The project is built with a multi-layered architecture using the Entity Framework Code First approach.

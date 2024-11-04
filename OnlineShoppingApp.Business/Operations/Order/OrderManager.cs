@@ -16,11 +16,10 @@ namespace OnlineShoppingApp.Business.Operations.Order
 {
     public class OrderManager : IOrderService
     {
-
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IRepository<OrderEntity> _orderRepository;
-        private readonly IRepository<OrderProductEntity> _orderProductRepository;
-        private readonly IProductService _productService;
+        private readonly IUnitOfWork _unitOfWork; // Unit of Work for managing transactions.
+        private readonly IRepository<OrderEntity> _orderRepository; // Repository for OrderEntity.
+        private readonly IRepository<OrderProductEntity> _orderProductRepository; // Repository for OrderProductEntity.
+        private readonly IProductService _productService; // Service for product operations.
 
         public OrderManager(IUnitOfWork unitOfWork, IRepository<OrderEntity> repository, IRepository<OrderProductEntity> orderProductRepository, IProductService productService)
         {
@@ -30,9 +29,10 @@ namespace OnlineShoppingApp.Business.Operations.Order
             _productService = productService;
         }
 
+        // Adds a new order.
         public async Task<ServiceMessage> AddOrder(AddOrderDto order)
         {
-            var hasOrder = await _orderRepository.UserExistAsync(order.UserId);
+            var hasOrder = await _orderRepository.UserExistAsync(order.UserId); // Check if the user exists.
 
             if (!hasOrder)
             {
@@ -42,7 +42,8 @@ namespace OnlineShoppingApp.Business.Operations.Order
                     Message = "User not found."
                 };
             }
-            await _unitOfWork.BeginTransaction();
+
+            await _unitOfWork.BeginTransaction(); // Begin transaction.
 
             var newOrderEntity = new OrderEntity
             {
@@ -50,16 +51,16 @@ namespace OnlineShoppingApp.Business.Operations.Order
                 OrderDate = DateTime.Now,
                 TotalAmount = 0,
                 OrderProducts = new List<OrderProductEntity>()
-
             };
 
+            // Loop through the products in the order.
             foreach (var productDto in order.Products)
             {
-                var productPrice = await _productService.GetProduct(productDto.ProductId);
+                var productPrice = await _productService.GetProduct(productDto.ProductId); // Get the product price.
 
                 if (productPrice is null)
                 {
-                    await _unitOfWork.RollBackTransaction();
+                    await _unitOfWork.RollBackTransaction(); // Roll back transaction if product not found.
                     return new ServiceMessage
                     {
                         IsSucceed = false,
@@ -73,21 +74,20 @@ namespace OnlineShoppingApp.Business.Operations.Order
                     Quantity = productDto.Quantity,
                 };
 
-                newOrderEntity.OrderProducts.Add(orderProduct);
-                newOrderEntity.TotalAmount += productPrice.Price * productDto.Quantity;
+                newOrderEntity.OrderProducts.Add(orderProduct); // Add product to the order.
+                newOrderEntity.TotalAmount += productPrice.Price * productDto.Quantity; // Update total amount.
             }
 
-
-            _orderRepository.Add(newOrderEntity);
+            _orderRepository.Add(newOrderEntity); // Add the new order entity.
 
             try
             {
-                await _unitOfWork.SaveChangesAsync();
-                await _unitOfWork.CommitTransaction();
+                await _unitOfWork.SaveChangesAsync(); // Save changes to the database.
+                await _unitOfWork.CommitTransaction(); // Commit transaction.
             }
             catch (Exception ex)
             {
-                await _unitOfWork.RollBackTransaction();
+                await _unitOfWork.RollBackTransaction(); // Roll back transaction on error.
                 throw new Exception("An error occurred while adding the order.", ex);
             }
 
@@ -95,32 +95,31 @@ namespace OnlineShoppingApp.Business.Operations.Order
             {
                 IsSucceed = true,
             };
-
         }
 
+        // Deletes an order by ID.
         public async Task<ServiceMessage> DeleteOrder(int id)
         {
-            var order = _orderRepository.GetById(id);
+            var order = _orderRepository.GetById(id); // Get the order by ID.
 
             if (order is null)
             {
-                new ServiceMessage
+                return new ServiceMessage // Return message if order not found.
                 {
                     IsSucceed = false,
                     Message = "Order not found."
                 };
             }
 
-            _orderRepository.Delete(id);
+            _orderRepository.Delete(id); // Delete the order.
 
             try
             {
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync(); // Save changes to the database.
             }
             catch (Exception ex)
             {
-
-                throw new Exception("An error occurred while deleting the order.", ex);
+                throw new Exception("An error occurred while deleting the order.", ex); // Handle exception.
             }
 
             return new ServiceMessage
@@ -129,6 +128,7 @@ namespace OnlineShoppingApp.Business.Operations.Order
             };
         }
 
+        // Gets an order by ID.
         public async Task<OrderDto> GetOrder(int id)
         {
             var order = await _orderRepository.GetAll(x => x.Id == id).Select(x => new OrderDto
@@ -146,12 +146,12 @@ namespace OnlineShoppingApp.Business.Operations.Order
                     PhoneNumber = x.User.PhoneNumber,
                     UserType = x.User.UserType,
                 }
+            }).FirstOrDefaultAsync(); // Select and map order to DTO.
 
-            }).FirstOrDefaultAsync();
-
-            return order;
+            return order; // Return the mapped order.
         }
 
+        // Gets all orders.
         public async Task<List<OrderDto>> GetOrders()
         {
             var order = await _orderRepository.GetAll().Select(x => new OrderDto
@@ -169,15 +169,15 @@ namespace OnlineShoppingApp.Business.Operations.Order
                     PhoneNumber = x.User.PhoneNumber,
                     UserType = x.User.UserType,
                 }
+            }).ToListAsync(); // Select and map all orders to DTOs.
 
-            }).ToListAsync();
-
-            return order;
+            return order; // Return the list of mapped orders.
         }
 
+        // Updates an existing order.
         public async Task<ServiceMessage> UpdateOrder(UpdateOrderDto order)
         {
-            var orderEntity = _orderRepository.GetById(order.Id);
+            var orderEntity = _orderRepository.GetById(order.Id); // Get the existing order.
 
             if (orderEntity is null)
             {
@@ -188,50 +188,52 @@ namespace OnlineShoppingApp.Business.Operations.Order
                 };
             }
 
-            await _unitOfWork.BeginTransaction();
+            await _unitOfWork.BeginTransaction(); // Begin transaction.
 
-            orderEntity.UserId = order.UserId;
-            //  orderEntity.OrderDate = order.OrderDate;
+            orderEntity.UserId = order.UserId; // Update user ID.
+            // orderEntity.OrderDate = order.OrderDate; // Optional: Update order date (commented out).
 
-            _orderRepository.Update(orderEntity);
+            _orderRepository.Update(orderEntity); // Update the order entity.
 
             try
             {
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync(); // Save changes to the database.
             }
             catch (Exception ex)
             {
-                await _unitOfWork.RollBackTransaction();
+                await _unitOfWork.RollBackTransaction(); // Roll back transaction on error.
                 throw new Exception("An error occurred while updating the order.", ex);
             }
 
-            var orderProducts = _orderProductRepository.GetAll(x => x.OrderId == x.Order.Id).ToList();
+            var orderProducts = _orderProductRepository.GetAll(x => x.OrderId == orderEntity.Id).ToList(); // Get all products for the order.
 
+            // Delete existing order products.
             foreach (var orderProduct in orderProducts)
             {
                 _orderProductRepository.Delete(orderProduct, false);
             }
 
+            // Add new order products.
             foreach (var productId in order.Products)
             {
                 var orderProduct = new OrderProductEntity
                 {
                     ProductId = productId.ProductId,
-                    Quantity= productId.Quantity,
+                    Quantity = productId.Quantity,
                     OrderId = orderEntity.Id
                 };
 
-                _orderProductRepository.Add(orderProduct);
+                _orderProductRepository.Add(orderProduct); // Add new product to the order.
             }
 
             try
             {
-                await _unitOfWork.SaveChangesAsync();
-                await _unitOfWork.CommitTransaction();
+                await _unitOfWork.SaveChangesAsync(); // Save changes to the database.
+                await _unitOfWork.CommitTransaction(); // Commit transaction.
             }
             catch (Exception ex)
             {
-                await _unitOfWork.RollBackTransaction();
+                await _unitOfWork.RollBackTransaction(); // Roll back transaction on error.
                 throw new Exception("An error occurred while updating the order products.", ex);
             }
 

@@ -1,4 +1,5 @@
-﻿using OnlineShoppingApp.Business.Operations.User.Dtos;
+﻿using OnlineShoppingApp.Business.Operations.Product.Dtos;
+using OnlineShoppingApp.Business.Operations.User.Dtos;
 using OnlineShoppingApp.Business.Types;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,8 @@ namespace OnlineShoppingApp.Business.Operations.User
         Task<ServiceMessage> AddUser(AddUserDto user); //It will be async because Unit of Work will be used.
 
         ServiceMessage<UserInfoDto> LoginUser(LoginUserDto user);
+
+        Task<List<UserInfoDto>> GetUsers();
+
     }
 }

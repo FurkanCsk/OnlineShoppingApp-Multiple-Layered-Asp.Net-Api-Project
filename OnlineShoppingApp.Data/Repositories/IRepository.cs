@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OnlineShoppingApp.Data.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,7 +18,6 @@ namespace OnlineShoppingApp.Data.Repositories
         TEntity GetById(int id);
         TEntity Get(Expression<Func<TEntity,bool>> predicate);
         IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate = null);
-
         Task<bool> UserExistAsync(int userId);
     }
 }

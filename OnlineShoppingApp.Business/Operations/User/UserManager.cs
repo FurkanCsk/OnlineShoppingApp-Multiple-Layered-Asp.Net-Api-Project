@@ -1,4 +1,6 @@
-﻿using OnlineShoppingApp.Business.DataProtection;
+﻿using Microsoft.EntityFrameworkCore;
+using OnlineShoppingApp.Business.DataProtection;
+using OnlineShoppingApp.Business.Operations.Product.Dtos;
 using OnlineShoppingApp.Business.Operations.User.Dtos;
 using OnlineShoppingApp.Business.Types;
 using OnlineShoppingApp.Data.Entities;
@@ -14,20 +16,21 @@ namespace OnlineShoppingApp.Business.Operations.User
 {
     public class UserManager : IUserService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IRepository<UserEntity> _userRepository;
-        private readonly IDataProtection _protector;
+        private readonly IUnitOfWork _unitOfWork; // Manages database transactions
+        private readonly IRepository<UserEntity> _userRepository; // Repository for user data
+        private readonly IDataProtection _protector; // Handles data protection
 
         public UserManager(IUnitOfWork unitOfWork, IRepository<UserEntity> userRepository,IDataProtection protector)
         {
-            _unitOfWork = unitOfWork;
-            _userRepository = userRepository;
-            _protector = protector;
+            _unitOfWork = unitOfWork; // Initialize unit of work
+            _userRepository = userRepository; // Initialize user repository
+            _protector = protector; // Initialize data protector
         }
 
 
         public async Task<ServiceMessage> AddUser(AddUserDto user)
         {
+            // Check if the email already exists in the database
             var hasMail = _userRepository.GetAll(x => x.Email.ToLower() == user.Email.ToLower());
 
             if(hasMail.Any())
@@ -38,23 +41,23 @@ namespace OnlineShoppingApp.Business.Operations.User
                     Message = "The email already exists."
                 };
             }
-
+            // Create a new user entity with protected password
             var userEntity = new UserEntity()
             {
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Password = _protector.Protect(user.Password),
+                Password = _protector.Protect(user.Password), // Protect the password
                 PhoneNumber = user.PhoneNumber,
                 UserType = UserEntity.Role.User
 
             };
 
-            _userRepository.Add(userEntity);
+            _userRepository.Add(userEntity); // Add the user entity to the repository
 
             try
             {
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync(); // Save changes to the database
             }
             catch (Exception)
             {
@@ -72,8 +75,23 @@ namespace OnlineShoppingApp.Business.Operations.User
             };
         }
 
+        public async Task<List<UserInfoDto>> GetUsers()
+        {
+            var users = await _userRepository.GetAll().Select(x => new UserInfoDto
+            {
+                Id = x.Id,
+                Email =  x.Email,
+                FirstName = x.FirstName,
+                LastName = x.LastName,
+                UserType = x.UserType
+            }).ToListAsync();
+
+            return users;
+        }
+
         public ServiceMessage<UserInfoDto> LoginUser(LoginUserDto user)
         {
+            // Retrieve user entity based on email
             var userEntity = _userRepository.Get(x => x.Email.ToLower() == user.Email.ToLower());
 
             if(userEntity is  null)
@@ -84,7 +102,7 @@ namespace OnlineShoppingApp.Business.Operations.User
                     Message = "Wrong email or password."
                 };
             }
-
+            // Unprotect the password for comparison
             var unprotectedPassword = _protector.UnProtect(userEntity.Password);
 
             if(unprotectedPassword == user.Password)

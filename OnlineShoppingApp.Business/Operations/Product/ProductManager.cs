@@ -14,8 +14,8 @@ namespace OnlineShoppingApp.Business.Operations.Product
 {
     public class ProductManager : IProductService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IRepository<ProductEntity> _productRepository;
+        private readonly IUnitOfWork _unitOfWork; // Handles database transactions
+        private readonly IRepository<ProductEntity> _productRepository; // Repository for product data
 
         public ProductManager(IUnitOfWork unitOfWork, IRepository<ProductEntity> repository)
         {
@@ -25,6 +25,7 @@ namespace OnlineShoppingApp.Business.Operations.Product
 
         public async Task<ServiceMessage> AddProduct(AddProductDto product)
         {
+            // Check if product already exists
             var hasProduct = _productRepository.GetAll(x => x.ProductName.ToLower() == product.ProductName.ToLower()).Any();
 
             if (hasProduct)
@@ -36,6 +37,7 @@ namespace OnlineShoppingApp.Business.Operations.Product
                 };
             }
 
+            // Create and add new product
             var productEntity = new ProductEntity
             {
                 ProductName = product.ProductName,
@@ -68,7 +70,7 @@ namespace OnlineShoppingApp.Business.Operations.Product
 
         public async Task<ServiceMessage> AdjustProductPrice(int id, decimal changeTo)
         {
-            var product = _productRepository.GetById(id);
+            var product = _productRepository.GetById(id); // Get product by ID
 
             if (product is null)
             {
@@ -81,7 +83,7 @@ namespace OnlineShoppingApp.Business.Operations.Product
 
             product.Price = changeTo;
 
-            _productRepository.Update(product);
+            _productRepository.Update(product); // Update product price
 
             try
             {
@@ -106,7 +108,7 @@ namespace OnlineShoppingApp.Business.Operations.Product
 
         public async Task<ServiceMessage> DeleteProduct(int id)
         {
-            var product = _productRepository.GetById(id);
+            var product = _productRepository.GetById(id); // Get product by ID
 
             if (product is null)
             {
@@ -117,7 +119,7 @@ namespace OnlineShoppingApp.Business.Operations.Product
                 };
             }
 
-            _productRepository.Delete(id);
+            _productRepository.Delete(id); // Delete product
 
             try
             {
@@ -141,6 +143,7 @@ namespace OnlineShoppingApp.Business.Operations.Product
 
         public async Task<ProductDto> GetProduct(int id)
         {
+            // Get product and map to DTO
             var product = await _productRepository.GetAll(x => x.Id == id).Select(x => new ProductDto
             {
                 ProductName = x.ProductName,
@@ -153,6 +156,7 @@ namespace OnlineShoppingApp.Business.Operations.Product
 
         public async Task<List<ProductDto>> GetProducts()
         {
+            // Get all products and map to DTOs
             var products = await _productRepository.GetAll().Select(x => new ProductDto
             {
                 ProductName = x.ProductName,
@@ -175,12 +179,12 @@ namespace OnlineShoppingApp.Business.Operations.Product
                     Message = "Product not found."
                 };
             }
-
+            // Update product properties
             productEntity.ProductName = product.ProductName;
             productEntity.Price = product.Price;
             productEntity.StockQuantity = product.StockQuantity;
 
-            _productRepository.Update(productEntity);
+            _productRepository.Update(productEntity); // Mark as updated
 
             try
             {

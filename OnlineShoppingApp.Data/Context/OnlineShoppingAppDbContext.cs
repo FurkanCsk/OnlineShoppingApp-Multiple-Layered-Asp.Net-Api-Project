@@ -18,22 +18,22 @@ namespace OnlineShoppingApp.Data.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Fluent Api
+            // Fluent API configuration for entity mappings
 
             modelBuilder.ApplyConfiguration(new OrderConfiguration());
             modelBuilder.ApplyConfiguration(new OrderProductConfiguration());
             modelBuilder.ApplyConfiguration(new ProductConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
 
-
+            // Seed initial data for SettingEntity
             modelBuilder.Entity<SettingEntity>().HasData(
                 new SettingEntity
                 {
                     Id = 1,
-                    MaintenanceMode = false
+                    MaintenanceMode = false // Set default maintenance mode to false
                 });
 
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(modelBuilder); // Call base method to ensure default behavior
         }
 
 

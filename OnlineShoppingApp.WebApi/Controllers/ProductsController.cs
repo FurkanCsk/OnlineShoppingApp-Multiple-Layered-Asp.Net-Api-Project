@@ -11,16 +11,17 @@ namespace OnlineShoppingApp.WebApi.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly IProductService _productService;
+        private readonly IProductService _productService; // Service for product-related operations
 
         public ProductsController(IProductService productService)
         {
-            _productService = productService;
+            _productService = productService; // Injecting the product service through dependency injection
         }
 
         [HttpGet]
         public async Task<IActionResult> GetProducts()
         {
+            // Retrieve the list of products
             var products = await _productService.GetProducts();
 
             return Ok(products);
@@ -31,6 +32,7 @@ namespace OnlineShoppingApp.WebApi.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProduct(int id)
         {
+            // Retrieve a specific product by ID
             var product = await _productService.GetProduct(id);
 
             if (product is null)
@@ -41,7 +43,7 @@ namespace OnlineShoppingApp.WebApi.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")] // Only allow Admin role to add products
         public async Task<IActionResult> AddProduct(AddProductRequest request)
         {
             if (!ModelState.IsValid)
@@ -49,6 +51,7 @@ namespace OnlineShoppingApp.WebApi.Controllers
                 return BadRequest(ModelState);
             }
 
+            // Create a DTO for adding a product
             var addProductDto = new AddProductDto
             {
                 ProductName = request.ProductName,
@@ -56,6 +59,7 @@ namespace OnlineShoppingApp.WebApi.Controllers
                 StockQuantity = request.StockQuantity,
             };
 
+            // Attempt to add the product using the product service
             var result = await _productService.AddProduct(addProductDto);
 
             if (result.IsSucceed)
@@ -69,11 +73,11 @@ namespace OnlineShoppingApp.WebApi.Controllers
         }
 
 
-
-        [HttpPatch("{id}/price")]
-        [Authorize(Roles = "Admin")]
+        [HttpPatch("{id}/price")] // Route for adjusting the price of a product
+        [Authorize(Roles = "Admin")] // Only allow Admin role to adjust prices
         public async Task<IActionResult> PatchProduct(int id, decimal changeTo)
         {
+            // Attempt to adjust the product price using the product service
             var result = await _productService.AdjustProductPrice(id, changeTo);
 
             if (result.IsSucceed)
@@ -86,10 +90,11 @@ namespace OnlineShoppingApp.WebApi.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")] // Route for deleting a product
+        [Authorize(Roles = "Admin")] // Only allow Admin role to delete products
         public async Task<IActionResult> DeleteProduct(int id)
         {
+            // Attempt to delete the product using the product service
             var result = await _productService.DeleteProduct(id);
 
             if (result.IsSucceed)
@@ -106,6 +111,7 @@ namespace OnlineShoppingApp.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateProduct(int id, UpdateProductRequest request)
         {
+            // Create a DTO for updating a product
             var updateProductDto = new UpdateProductDto
             {
                 Id = id,

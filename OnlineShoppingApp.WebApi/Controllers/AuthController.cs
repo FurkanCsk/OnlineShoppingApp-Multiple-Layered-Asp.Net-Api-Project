@@ -6,6 +6,8 @@ using OnlineShoppingApp.Business.Operations.User;
 using OnlineShoppingApp.Business.Operations.User.Dtos;
 using OnlineShoppingApp.WebApi.Jwt;
 using OnlineShoppingApp.WebApi.Models;
+using System.Security.Claims;
+using System.Security.Principal;
 
 namespace OnlineShoppingApp.WebApi.Controllers
 {
@@ -13,22 +15,23 @@ namespace OnlineShoppingApp.WebApi.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IUserService _userService; // Service for user-related operations
 
         public AuthController(IUserService userService)
         {
-            _userService = userService;
+            _userService = userService; // Injecting the user service through dependency injection
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
-            if(!ModelState.IsValid)
+            // Validate the request model
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
-            } // TODO: Will code with action filter
+            }
 
-
+            // Create a DTO for adding a user
             var addUserDto = new AddUserDto
             {
                 Email = request.Email,
@@ -38,6 +41,7 @@ namespace OnlineShoppingApp.WebApi.Controllers
                 PhoneNumber = request.PhoneNumber,
             };
 
+            // Call the user service to add a new user
             var result = await _userService.AddUser(addUserDto);
 
             if(result.IsSucceed)
@@ -46,7 +50,7 @@ namespace OnlineShoppingApp.WebApi.Controllers
             }
             else
             {
-                return BadRequest(result.Message);
+                return BadRequest(result.Message); // Return failure message if user registration fails
             }
         }
 
@@ -55,26 +59,30 @@ namespace OnlineShoppingApp.WebApi.Controllers
         {
             if(!ModelState.IsValid)
             {
-                return BadRequest(ModelState); // ACTION FILTER UGULANACAK
+                return BadRequest(ModelState);
             }
 
+            // Create a DTO for user login
             var loginUserDto = new LoginUserDto
             {
                 Email = request.Email,
                 Password = request.Password
             };
 
+            // Attempt to log in the user
             var result = _userService.LoginUser(new LoginUserDto { Email = request.Email, Password = request.Password});
 
             if(!result.IsSucceed)
             {
-                return BadRequest(result.Message);
+                return BadRequest(result.Message); // Return failure message if login fails
             }
 
             var user = result.Data;
 
+            // Retrieve JWT configuration from the request services
             var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
 
+            // Generate a JWT token for the user
             var token = JwtHelper.GenerateJwtToken(new JwtDto
             {
                 Id = user.Id,
@@ -88,6 +96,7 @@ namespace OnlineShoppingApp.WebApi.Controllers
                 ExpireMinutes = int.Parse(configuration["Jwt:ExpireMinutes"]!)
             });
 
+            // Return the success response with the token
             return Ok(new LoginResponse
             {
                 Message = "Login successful",
@@ -95,11 +104,13 @@ namespace OnlineShoppingApp.WebApi.Controllers
             });
         }
 
-        [HttpGet("me")]
-        [Authorize]
-        public async Task<IActionResult> GetMyUser()
+        [HttpGet("Users")]
+        [Authorize(Roles = "Admin")] // Requires authentication
+        public async Task<IActionResult> GetAllUsers()
         {
-            return Ok();
+            var users = await _userService.GetUsers();
+
+            return Ok(users);
         }
     }
 }

@@ -11,33 +11,34 @@ namespace OnlineShoppingApp.Business.Operations.Setting
 {
     public class SettingManager : ISettingService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IRepository<SettingEntity> _settingRepository;
+        private readonly IUnitOfWork _unitOfWork; // Manages database transactions
+        private readonly IRepository<SettingEntity> _settingRepository; // Repository for setting data
 
         public SettingManager(IUnitOfWork unitOfWork, IRepository<SettingEntity> settingRepository)
         {
-            _settingRepository = settingRepository;
-            _unitOfWork = unitOfWork;
+            _settingRepository = settingRepository; // Initialize settings repository
+            _unitOfWork = unitOfWork; // Initialize unit of work
         }
 
         public bool GetMaintenanceState()
         {
+            // Retrieve the maintenance mode state
             var maintenanceState = _settingRepository.GetById(1).MaintenanceMode;
 
-            return maintenanceState;
+            return maintenanceState; // Return the state
         }
 
         public async Task ToggleMaintenance()
         {
-            var setting = _settingRepository.GetById(1);
+            var setting = _settingRepository.GetById(1); // Get the settings entity
 
-            setting.MaintenanceMode = !setting.MaintenanceMode;
+            setting.MaintenanceMode = !setting.MaintenanceMode; // Toggle maintenance mode
 
-            _settingRepository.Update(setting);
+            _settingRepository.Update(setting); // Mark setting as updated
 
             try
             {
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync(); // Save changes to the database
             }
             catch (Exception)
             {

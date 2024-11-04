@@ -13,21 +13,21 @@ namespace OnlineShoppingApp.Data.Repositories
     public class Repository<TEntity> : IRepository<TEntity>
         where TEntity : BaseEntity
     {
-        private readonly OnlineShoppingAppDbContext _db;
-        private readonly DbSet<TEntity> _dbSet;
+        private readonly OnlineShoppingAppDbContext _db; // Database context for accessing data
+        private readonly DbSet<TEntity> _dbSet; // Set of entities of type TEntity
 
         public Repository(OnlineShoppingAppDbContext db)
         {
-            _db = db;
-            _dbSet = _db.Set<TEntity>();
+            _db = db; // Initialize the database context
+            _dbSet = _db.Set<TEntity>(); // Get the DbSet for the entity type
         }
 
 
         public void Add(TEntity entity)
         {
-            entity.CreatedDate = DateTime.Now;
-            _dbSet.Add(entity);
-            
+            entity.CreatedDate = DateTime.Now; // Set the creation date
+            _dbSet.Add(entity); // Add the entity to the DbSet
+
 
         }
 
@@ -40,47 +40,48 @@ namespace OnlineShoppingApp.Data.Repositories
 
             if (softDelete)
             {
-                entity.ModifiedDate = DateTime.Now;
-                entity.IsDeleted = true;
-                _dbSet.Update(entity);
+                entity.ModifiedDate = DateTime.Now; // Set the modification date
+                entity.IsDeleted = true; // Mark the entity as deleted
+                _dbSet.Update(entity); // Update the entity in the DbSet
             }
             else
             {
-                _dbSet.Remove(entity);
+                _dbSet.Remove(entity); // Permanently remove the entity
             }
         }
 
         public void Delete(int id)
         {
-            var entity = _dbSet.Find(id);
-            Delete(entity);
+            var entity = _dbSet.Find(id); // Find the entity by its ID
+            Delete(entity); // Call the overloaded Delete method
         }
 
         public TEntity Get(Expression<Func<TEntity, bool>> predicate)
         {
-            return _dbSet.FirstOrDefault(predicate);
+            return _dbSet.FirstOrDefault(predicate); // Retrieve the first entity that matches the predicate
         }
 
         public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate = null)
         {
+            // Return all entities or those that match the provided predicate
             return predicate is null ? _dbSet : _dbSet.Where(predicate);
         }
 
         public TEntity GetById(int id)
         {
-            return _dbSet.Find(id);
+            return _dbSet.Find(id); // Find and return the entity by its ID
         }
 
         public void Update(TEntity entity)
         {
-            entity.ModifiedDate = DateTime.Now;
-            _dbSet.Update(entity);
-            
+            entity.ModifiedDate = DateTime.Now; // Set the modification date
+            _dbSet.Update(entity); // Update the entity in the DbSet
+
         }
 
         public async Task<bool> UserExistAsync(int userId)
         {
-            return await _db.Users.AnyAsync(x => x.Id == userId);
+            return await _db.Users.AnyAsync(x => x.Id == userId);  // Check if a user exists with the given ID
         }
     }
 }

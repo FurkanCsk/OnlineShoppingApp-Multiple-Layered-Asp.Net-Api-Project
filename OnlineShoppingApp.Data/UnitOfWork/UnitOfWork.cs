@@ -10,37 +10,37 @@ namespace OnlineShoppingApp.Data.UnitOfWork
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private readonly OnlineShoppingAppDbContext _db;
-        private IDbContextTransaction _dbTransaction;
+        private readonly OnlineShoppingAppDbContext _db; // The database context for managing entity framework operations
+        private IDbContextTransaction _dbTransaction; // Transaction object for managing database transactions
 
         public UnitOfWork(OnlineShoppingAppDbContext db)
         {
-            _db = db;   
+            _db = db;   // Initialize the database context
         }
 
         public async Task BeginTransaction()
         {
-            _dbTransaction = await _db.Database.BeginTransactionAsync();
+            _dbTransaction = await _db.Database.BeginTransactionAsync(); // Start a newdatabase transaction
         }
 
         public async Task CommitTransaction()
         {
-            await _dbTransaction.CommitAsync();
+            await _dbTransaction.CommitAsync(); // Commit the current transaction to the database
         }
 
         public void Dispose()
         {
-            _db.Dispose(); 
+            _db.Dispose();  // Dispose of the database context when done
         }
 
         public async Task RollBackTransaction()
         {
-            await _dbTransaction.RollbackAsync();
+            await _dbTransaction.RollbackAsync(); // Roll back the current transaction if an error occurs
         }
 
         public async Task<int> SaveChangesAsync()
         {
-            return await _db.SaveChangesAsync();
+            return await _db.SaveChangesAsync(); // Save all changes made in the context to the database
         }
     }
 }
